@@ -9,6 +9,7 @@ ip1 = '172.16.23.197'
 ip2 = '172.16.23.97'
 gw = '172.16.20.1'
 netmask = '255.255.252.0'
+rebootIp = '172.16.29.63'
 
 def GetNetInfo(sIp):
     url = 'http://{}/GetNetInfo.psp'.format(sIp)
@@ -89,12 +90,28 @@ def NetJob():
     else:
         SetDhcpNetInfo(url)
     print('job step 3')
+# 
+def RebootSys(sIp):
+    url = 'http://{}/RebootSys.psp'.format(sIp)
+    body = ''
+    jsonBody = json.dumps(body)
+    rep = requests.post(url, data=jsonBody, timeout=30)
 
-if __name__ == '__main__':
+    print(rep.text)  
+
+def SysJob():
+    print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    print('job step 1')
+    global rebootIp
+    RebootSys(rebootIp)
+    print('job step 2')
+
+#
+def NetOpMain():
     print('arg cnt:{} arg0:{} arg1:{}'.format(len(sys.argv), sys.argv[0], sys.argv[1]))
     index = int(sys.argv[1])
 
-    #global ip1, ip2, gw, netmask
+    global ip1, ip2, gw, netmask
     if index == 1:
         print("index 1")
         ip1 = '172.16.26.217'
@@ -111,6 +128,21 @@ if __name__ == '__main__':
     sched = BlockingScheduler()
     sched.add_job(NetJob, 'interval', seconds=1)
     sched.start()
+
+def SysOpMain():
+    print('arg cnt:{} arg0:{}'.format(len(sys.argv), sys.argv[0]))
+
+    global rebootIp
+    if len(sys.argv) >= 2:
+        rebootIp = str(sys.argv[1])
+        print('ip:{}'.format(rebootIp))
+
+    sched = BlockingScheduler()
+    sched.add_job(SysJob, 'interval', seconds=60)
+    sched.start()
+
+if __name__ == '__main__':
+    SysOpMain()
     
     
     
